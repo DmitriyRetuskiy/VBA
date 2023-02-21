@@ -1,0 +1,212 @@
+Private Sub cmSendAccess_Click()
+  Dim fs, wtTaskDBName, wtTaskDBDot As String
+  Dim dbc As Database
+  Dim StrSQL, NewRev As String
+  Dim LastRevDt As Date
+  
+  If IsNull(Me.lstTask.Column(2)) Or IsEmpty(Me.lstTask.Column(2)) Or Me.lstTask.Column(2) = "" Then
+    m = MsgBox("Ýêñïîðò äàííûõ íåâîçìîæåí!!" & Chr(13) & "Îòñóòñòâóåò íîìåð çàäàíèÿ!!", vbExclamation + vbOKOnly)
+  Else
+  
+    Set fs = CreateObject("Scripting.FileSystemObject")
+    If Not fs.FileExists(CurBaseDir(0) & "\TaskImport.mdb") Then
+      m = MsgBox("Ýêñïîðò äàííûõ íåâîçìîæåí!!" & Chr(13) & "Â òåêóùåì êàòàëîãå îòñóòñòâóåò ôàéë TaskImport.mdb", vbExclamation + vbOKOnly)
+    Else
+      wtTaskDBName = CurBaseDir(0) & "\" & Trim(Me.lstTask.Column(2)) & ".mdb"
+      wtTaskDBDot = CurBaseDir(0) & "\TaskImport.mdb"
+      fs.CopyFile wtTaskDBDot, wtTaskDBName, True
+      
+      ' èíäåêñ ðåâèçèè
+      Me.PrgBar.Visible = True
+      Me.PrgComment.Caption = "Èíäåêñ ðåâèçèè.."
+      NewRev = CountRev(Me.lstTask)
+      LastRevDt = CountRevDt(Me.lstTask)
+      Me.PrgBar.Value = 5
+      
+      ' òàáëèöû äëÿ èìïîðòà
+      Set dbc = CurrentDb()
+      ' dbo_Task_AA
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÂÅÄÎÌÎÑÒÜ ÝËÅÊÒÐÎÏÐÈÂÎÄÍÎÉ ÀÐÌÀÒÓÐÛ.."
+      Me.Repaint
+      If TableExist("imp_TASK_AA") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_AA"
+      End If
+      StrSQL = "SELECT dbo_TASK_AA.* INTO imp_TASK_AA FROM dbo_TASK_AA WHERE (((dbo_TASK_AA.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      StrSQL = "UPDATE imp_TASK_AA SET imp_TASK_AA.REV = '" & NewRev & "' WHERE (((imp_TASK_AA.DT_FIXED1)> DateSerial(" & Year(LastRevDt) & "," & Month(LastRevDt) & "," & Day(LastRevDt) & ")));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 10
+      
+      ' dbo_Task_AE_AU
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÂÅÄÎÌÎÑÒÜ ÝËÅÊÒÐÎÄÂÈÃÀÒÅËÅÉ.."
+      Me.Repaint
+      If TableExist("imp_TASK_AE_AU") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_AE_AU"
+      End If
+      StrSQL = "SELECT dbo_TASK_AE_AU.* INTO imp_TASK_AE_AU FROM dbo_TASK_AE_AU WHERE (((dbo_TASK_AE_AU.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      StrSQL = "UPDATE imp_TASK_AE_AU SET imp_TASK_AE_AU.REV = '" & NewRev & "' WHERE (((imp_TASK_AE_AU.DT_FIXED1)> DateSerial(" & Year(LastRevDt) & "," & Month(LastRevDt) & "," & Day(LastRevDt) & ")));"
+      dbc.Execute (StrSQL)
+      
+      ' dbo_Task_AE_AU_dbl
+      If TableExist("imp_TASK_AE_AU_dbl") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_AE_AU_dbl"
+      End If
+      StrSQL = "SELECT dbo_TASK_AE_AU_dbl.* INTO imp_TASK_AE_AU_dbl FROM dbo_TASK_AE_AU_dbl WHERE (((dbo_TASK_AE_AU_dbl.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 20
+      
+      ' dbo_Task_CC_CY
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÂÅÄÎÌÎÑÒÜ ÒÎ×ÅÊ ÊÎÍÒÐÎËß.."
+      Me.Repaint
+      If TableExist("imp_TASK_CC_CY") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_CC_CY"
+      End If
+      StrSQL = "SELECT dbo_TASK_CC_CY.* INTO imp_TASK_CC_CY FROM dbo_TASK_CC_CY WHERE (((dbo_TASK_CC_CY.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      StrSQL = "UPDATE imp_TASK_CC_CY SET imp_TASK_CC_CY.REV = '" & NewRev & "' WHERE (((imp_TASK_CC_CY.DT_FIXED1)> DateSerial(" & Year(LastRevDt) & "," & Month(LastRevDt) & "," & Day(LastRevDt) & ")));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 25
+      
+      ' dbo_ACC_ELE
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÐÀÇÌÅÙÅÍÈÅ ÎÁÎÐÓÄÎÂÀÍÈß.."
+      Me.Repaint
+      If TableExist("imp_ACC_ELE") Then
+        DoCmd.DeleteObject acTable, "imp_ACC_ELE"
+      End If
+      StrSQL = "SELECT dbo_ACC_ELE.* INTO imp_ACC_ELE FROM dbo_ACC_ELE INNER JOIN MARK_UNT_used ON dbo_ACC_ELE.MARK_UNT = MARK_UNT_used.MARK_UNT WHERE (((MARK_UNT_used.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 30
+      
+      ' dbo_TASK_BLOCK_NUM
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÂÅÄÎÌÎÑÒÜ ÇÀÙÈÒ, ÁËÎÊÈÐÎÂÎÊ È ÄÅÉÑÒÂÈÉ ÎÏÅÐÀÒÎÐÀ.."
+      Me.Repaint
+      If TableExist("imp_TASK_BLOCK_NUM") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_BLOCK_NUM"
+      End If
+      StrSQL = "SELECT DISTINCT dbo_TASK_BLOCK_NUM.* INTO imp_TASK_BLOCK_NUM FROM MARK_UNT_used INNER JOIN dbo_TASK_BLOCK_NUM ON MARK_UNT_used.BLOCK_NUMB = dbo_TASK_BLOCK_NUM.BLOCK_NUMB WHERE (((MARK_UNT_used.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 35
+      
+      ' dbo_TASK_NUMB_FGU
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÀËÃÎÐÈÒÌÛ ÓÏÐÀÂËÅÍÈß.."
+      Me.Repaint
+      If TableExist("imp_TASK_NUMB_FGU") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_NUMB_FGU"
+      End If
+      StrSQL = "SELECT DISTINCT dbo_TASK_NUMB_FGU.* INTO imp_TASK_NUMB_FGU FROM MARK_UNT_used INNER JOIN dbo_TASK_NUMB_FGU ON MARK_UNT_used.NUMB_FGU = dbo_TASK_NUMB_FGU.NUMB_FGU WHERE (((MARK_UNT_used.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 40
+      
+      ' dbo_TASK_CTR_PLACE
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÌÅÑÒÀ ÓÏÐÀÂËÅÍÈß È ÏÐÅÄÑÒÀÂËÅÍÈß ÈÍÔÎÐÌÀÖÈÈ.."
+      Me.Repaint
+      If TableExist("imp_TASK_CTR_PLACE") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_CTR_PLACE"
+      End If
+      StrSQL = "SELECT dbo_TASK_CTR_PLACE.* INTO imp_TASK_CTR_PLACE FROM MARK_UNT_used INNER JOIN dbo_TASK_CTR_PLACE ON MARK_UNT_used.MARK_UNT = dbo_TASK_CTR_PLACE.MARK_UNT WHERE (((MARK_UNT_used.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 45
+      
+      ' dbo_TASK_SIG
+      Me.PrgComment.Caption = "Ïîäãîòîâêà òàáëèö: ÓÑÒÀÂÊÈ.."
+      Me.Repaint
+      If TableExist("imp_TASK_SIG") Then
+        DoCmd.DeleteObject acTable, "imp_TASK_SIG"
+      End If
+      StrSQL = "SELECT dbo_TASK_SIG.* INTO imp_TASK_SIG FROM dbo_TASK_CC_CY INNER JOIN dbo_TASK_SIG ON dbo_TASK_CC_CY.MARK_UNT = dbo_TASK_SIG.MARK_UNT WHERE (((dbo_TASK_CC_CY.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "'));"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 50
+
+      ' ýêñïîðò äàííûõ è óäàëåíèå âðåìåííûõ òàáëèö
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÂÅÄÎÌÎÑÒÜ ÝËÅÊÒÐÎÏÐÈÂÎÄÍÎÉ ÀÐÌÀÒÓÐÛ.."
+      Me.Repaint
+      If TableExist("imp_TASK_AA") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_TASK_AA", "dbo_TASK_AA", False
+        DoCmd.DeleteObject acTable, "imp_TASK_AA"
+      End If
+      Me.PrgBar.Value = 55
+   
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÂÅÄÎÌÎÑÒÜ ÝËÅÊÒÐÎÄÂÈÃÀÒÅËÅÉ.."
+      Me.Repaint
+      If TableExist("imp_TASK_AE_AU") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_Task_AE_AU", "dbo_Task_AE_AU", False
+        DoCmd.DeleteObject acTable, "imp_TASK_AE_AU"
+      End If
+    
+      If TableExist("imp_TASK_AE_AU_dbl") Then
+       DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_Task_AE_AU_dbl", "dbo_Task_AE_AU_dbl", False
+       DoCmd.DeleteObject acTable, "imp_TASK_AE_AU_dbl"
+      End If
+      Me.PrgBar.Value = 65
+     
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÂÅÄÎÌÎÑÒÜ ÒÎ×ÅÊ ÊÎÍÒÐÎËß.."
+      Me.Repaint
+      If TableExist("imp_TASK_CC_CY") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_TASK_CC_CY", "dbo_TASK_CC_CY", False
+        DoCmd.DeleteObject acTable, "imp_TASK_CC_CY"
+      End If
+      Me.PrgBar.Value = 70
+    
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÐÀÇÌÅÙÅÍÈÅ ÎÁÎÐÓÄÎÂÀÍÈß.."
+      Me.Repaint
+      If TableExist("imp_ACC_ELE") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_ACC_ELE", "dbo_ACC_ELE", False
+        DoCmd.DeleteObject acTable, "imp_ACC_ELE"
+      End If
+      Me.PrgBar.Value = 75
+    
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÂÅÄÎÌÎÑÒÜ ÇÀÙÈÒ, ÁËÎÊÈÐÎÂÎÊ È ÄÅÉÑÒÂÈÉ ÎÏÅÐÀÒÎÐÀ.."
+      Me.Repaint
+      If TableExist("imp_TASK_BLOCK_NUM") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_TASK_BLOCK_NUM", "dbo_TASK_BLOCK_NUM", False
+        DoCmd.DeleteObject acTable, "imp_TASK_BLOCK_NUM"
+      End If
+      Me.PrgBar.Value = 80
+    
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÀËÃÎÐÈÒÌÛ ÓÏÐÀÂËÅÍÈß.."
+      Me.Repaint
+      If TableExist("imp_TASK_NUMB_FGU") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_TASK_NUMB_FGU", "dbo_TASK_NUMB_FGU", False
+        DoCmd.DeleteObject acTable, "imp_TASK_NUMB_FGU"
+      End If
+      Me.PrgBar.Value = 85
+    
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÌÅÑÒÀ ÓÏÐÀÂËÅÍÈß È ÏÐÅÄÑÒÀÂËÅÍÈß ÈÍÔÎÐÌÀÖÈÈ.."
+      Me.Repaint
+      If TableExist("imp_TASK_CTR_PLACE") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_TASK_CTR_PLACE", "dbo_TASK_CTR_PLACE", False
+        DoCmd.DeleteObject acTable, "imp_TASK_CTR_PLACE"
+      End If
+      Me.PrgBar.Value = 90
+    
+      Me.PrgComment.Caption = "Ýêñïîðò òàáëèö: ÓÑÒÀÂÊÈ.."
+      Me.Repaint
+      If TableExist("imp_TASK_SIG") Then
+        DoCmd.TransferDatabase acExport, "Microsoft Access", wtTaskDBName, acTable, "imp_TASK_SIG", "dbo_TASK_SIG", False
+        DoCmd.DeleteObject acTable, "imp_TASK_SIG"
+      End If
+      Me.PrgBar.Value = 95
+    
+    ' îòìåòêà îá èçìåíåíèè
+      Me.PrgComment.Caption = "Îòìåòêà îá èçìåíåíèè.."
+      Me.Repaint
+      StrSQL = "DELETE dbo_TASK_HISTORY.T_SYS, dbo_TASK_HISTORY.STAGE FROM dbo_TASK_HISTORY WHERE (((dbo_TASK_HISTORY.T_SYS)='" & [Forms]![tsk_Output]![lstTask] & "') AND ((dbo_TASK_HISTORY.STAGE)='S'));"
+      dbc.Execute (StrSQL)
+      StrSQL = "INSERT INTO dbo_TASK_HISTORY (T_SYS, REV, DT_FIXED, STAGE ) SELECT '" & [Forms]![tsk_Output]![lstTask] & "' AS T_SYS, '" & NewRev & "' AS REV, Date() AS RevDT, 'S' AS STAGE;"
+      dbc.Execute (StrSQL)
+      Me.PrgBar.Value = 100
+      
+      MsgBox ("Ýêñïîðò äàííûõ çàâåðøåí!!")
+      Me.lstTask.Requery
+      Me.PrgComment.Caption = ""
+      Me.Repaint
+      Me.PrgBar.Value = 0
+      Me.PrgBar.Visible = False
+    End If
+  
+  End If
+  
+  Set fs = Nothing
+
+End Sub
